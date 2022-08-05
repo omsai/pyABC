@@ -194,6 +194,9 @@ class RedisEvalParallelSampler(RedisSamplerBase):
         If not, then the sampler only waits for all simulations that were
         started prior to the last started particle of the first `n`
         acceptances.
+    adapt_pre_proposal:
+        Whether to adapt the proposal distribution of the preliminary
+        population or not. .
     log_file:
         A file for a dedicated sampler history. Updated in each iteration.
         This log file is complementary to the logging realized via the
@@ -212,7 +215,6 @@ class RedisEvalParallelSampler(RedisSamplerBase):
         wait_for_all_samples: bool = False,
         adapt_pre_proposal: bool = False,
         log_file: str = None,
-
     ):
         super().__init__(
             host=host, port=port, password=password, log_file=log_file
