@@ -5,6 +5,7 @@ from numbers import Number
 from typing import Callable, Collection, Dict, List, Union
 
 import numpy as np
+import os
 
 from ..population import Sample
 from ..predictor import Predictor
@@ -514,6 +515,7 @@ class InfoWeightedPNormDistance(AdaptivePNormDistance):
         initial_scale_weights: Dict[str, float] = None,
         initial_info_weights: Dict[str, float] = None,
         fixed_weights: Dict[str, float] = None,
+        fixed_weights_taken_instead: Dict[str, float] = None,
         fit_scale_ixs: Union[EventIxs, Collection, int] = np.inf,
         fit_info_ixs: Union[EventIxs, Collection, int] = None,
         normalize_by_par: bool = True,
@@ -547,6 +549,9 @@ class InfoWeightedPNormDistance(AdaptivePNormDistance):
             and may change in the future.
             In particular, consider making it dependent on the total number of
             simulations.
+        fixed_weights_taken_instead:
+            If set, the weights in this dictionary are taken instead of the
+             informative weights.
         normalize_by_par:
             Whether to normalize total sensitivities of each parameter to 1.
         max_info_weight_ratio:
@@ -634,6 +639,7 @@ class InfoWeightedPNormDistance(AdaptivePNormDistance):
         if par_trafo is None:
             par_trafo = ParTrafo()
         self.par_trafo: ParTrafoBase = par_trafo
+        self.fixed_weights_taken_instead: dict = fixed_weights_taken_instead
 
     def configure_sampler(self, sampler) -> None:
         """
@@ -963,7 +969,23 @@ class InfoWeightedPNormDistance(AdaptivePNormDistance):
         info_weights: np.ndarray = PNormDistance.for_t_or_latest(
             self.info_weights, t
         )
-        return super().get_weights(t=t) * info_weights
+        aggregated_weights = super().get_weights(t=t) * info_weights
+        if self.fixed_weights_taken_instead is not None:
+            for key, val in self.fixed_weights_taken_instead.items():
+                aggregated_weights[key] = val
+                file_name, ext = os.path.splitext(self.info_log_file)
+                file_name = file_name+"_fixed_weights"+ext
+                # check if file does not exists
+                if not os.path.exists(file_name):
+                    log_weights(
+                        t=t,
+                        weights={0: aggregated_weights},
+                        keys=self.sumstat.get_ids(),
+                        label="Info",
+                        log_file=file_name,
+                    )
+
+        return aggregated_weights
 
     def requires_calibration(self) -> bool:
         if self.initial_info_weights is None:
