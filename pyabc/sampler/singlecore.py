@@ -2,6 +2,7 @@ import numpy as np
 from jabbar import jabbar
 
 from .base import Sampler
+import threading
 
 
 class SingleCoreSampler(Sampler):
@@ -38,6 +39,7 @@ class SingleCoreSampler(Sampler):
                 new_sim = simulate_one()
                 sample.append(new_sim)
                 nr_simulations += 1
+                print(threading.enumerate())
                 if new_sim.accepted:
                     break
         self.nr_evaluations_ = nr_simulations
