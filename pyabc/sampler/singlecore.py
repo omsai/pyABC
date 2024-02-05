@@ -39,6 +39,7 @@ class SingleCoreSampler(Sampler):
                 new_sim = simulate_one()
                 sample.append(new_sim)
                 nr_simulations += 1
+                print(f"Active threads: {threading.active_count}")
                 print(threading.enumerate())
                 if new_sim.accepted:
                     break
