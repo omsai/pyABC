@@ -8,6 +8,7 @@ from jabbar import jabbar
 
 from .multicorebase import MultiCoreSampler, get_if_worker_healthy
 from .singlecore import SingleCoreSampler
+from .multicore_evaluation_parallel import MulticoreEvalParallelSampler
 
 logger = logging.getLogger("ABC.Sampler")
 
@@ -95,9 +96,11 @@ class MulticoreParticleParallelSampler(MultiCoreSampler):
 
         feed_process = Process(target=feed, args=(feed_q, n, n_procs))
 
-        single_core_sampler = SingleCoreSampler(
-            check_max_eval=self.check_max_eval
-        )
+        #single_core_sampler = SingleCoreSampler(
+        #    check_max_eval=self.check_max_eval
+        #)
+
+        single_core_sampler = MulticoreEvalParallelSampler(n_procs=1, check_max_eval=self.check_max_eval)
         # the max_eval handling in this sampler is certainly not optimal
         single_core_sampler.sample_factory = self.sample_factory
 
